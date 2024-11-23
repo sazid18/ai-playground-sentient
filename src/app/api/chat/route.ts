@@ -1,6 +1,7 @@
 import { google } from "@ai-sdk/google";
 import { streamText } from "ai";
 
+// DUmmy PR
 export const maxDuration = 60;
 export async function POST(req: Request) {
   const {
