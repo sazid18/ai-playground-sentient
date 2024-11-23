@@ -1,12 +1,14 @@
 "use client";
 
 import { Message, useChat } from "ai/react";
-import MessageContainer from "./MessageCotainer";
-import { toast } from "react-hot-toast";
+import MessageComponent from "./MessageComponent";
+import { toast } from "@/hooks/use-toast";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useModelConfig } from "@/contexts/ModelContext";
+import { ModelMetric } from "./ModelMetric";
 
-export default function Chat() {
+export function Chat() {
   const {
     messages,
     input,
@@ -19,34 +21,22 @@ export default function Chat() {
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const startTime = useRef(new Date().getTime());
 
-  const {modelConfig} = useModelConfig();
+  const { modelConfig } = useModelConfig();
 
   // Assumption: that a model has this fixed token limit,
   // this should ideally be configurable based on model used in streamText
   const maxTokens = useRef(8192);
-
-  const intersectionObserver = useRef<IntersectionObserver | null>(null);
   const [metrics, setMetrics] = useState({
     tokensPerSecond: 0,
     totalTokensUsed: 0,
     estimatedCompletionTime: 0,
   });
 
-  useEffect(() => {
-    intersectionObserver.current = new IntersectionObserver((entries) => {
-      if (bottomRef.current) {
-        const currentBottomRef = entries[0];
-        if (!currentBottomRef.isIntersecting && isLoading) {
-          console.log(" isLoading ", isLoading);
-          bottomRef.current.scrollIntoView({ behavior: "smooth" });
-        }
-      }
-    });
-    return () => intersectionObserver.current?.disconnect();
-  }, [])
-
   // SideEffect to handle live metrics
   useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
     const tokensCount = messages.at(-1)?.content.split(" ").length || 0;
     const totalTime = new Date().getTime() - startTime.current;
     const tokensPerSecond = (tokensCount * 1000) / totalTime;
@@ -63,16 +53,6 @@ export default function Chat() {
     });
   }, [messages]);
 
-  useEffect(() => {
-    if (isLoading && bottomRef.current) {
-      console.log("observing bottom ref");
-      intersectionObserver.current?.observe(bottomRef.current);
-    } else {
-      console.log("unobserving bottom ref");
-      setTimeout(() => intersectionObserver.current?.unobserve(bottomRef.current!), 0);
-    }
-  }, [isLoading]);
-
   const getTotalTokenUsed = (aiMessages: Message[]) => {
     return aiMessages.reduce((acc, val) => {
       return (acc += val.content.split(" ").length);
@@ -80,15 +60,15 @@ export default function Chat() {
   };
 
   const handleFormSubmit = (event: { preventDefault?: () => void }) => {
-    // event?.preventDefault();
     startTime.current = new Date().getTime();
-
-    console.log('event =',event);
-    handleSubmit(event, {data: {modelConfig: {...modelConfig}}});
+    handleSubmit(event, { data: { modelConfig: { ...modelConfig } } });
   };
 
   const handleToast = useCallback(() => {
-    toast("Content has been copied in clipboard");
+    toast({
+      title: "Success",
+      description: "Content has been copied in clipboard",
+    });
   }, []);
 
   return (
@@ -101,15 +81,12 @@ export default function Chat() {
           display: "flex",
           flexDirection: "column",
           background: "lightgrey",
+          height:'15vh'
         }}
       >
-        <div> Tokens Per Second: {metrics.tokensPerSecond} </div>
-        <div> Total Tokens Used: {metrics.totalTokensUsed} </div>
-        <div>
-          {" "}
-          Estimated Completion Time:{" "}
-          {isLoading ? metrics.estimatedCompletionTime : 0} sec{" "}
-        </div>
+        <ModelMetric label={'Total Tokens Used:'} value={metrics.totalTokensUsed}/>
+        <ModelMetric label={'Estimated Completion Time:'} value={isLoading ? metrics.estimatedCompletionTime : 0} unit={'sec'}/>
+        <ModelMetric label={'Tokens Per Second: '} value={metrics.tokensPerSecond}/>
       </div>
       <div
         style={{
@@ -119,13 +96,13 @@ export default function Chat() {
           borderRadius: "8px",
           overflow: "hidden",
           boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-          height: "90vh",
+          height: "85vh",
         }}
       >
         <div className="chat-container">
           <div className="message-container">
             {messages.map((message) => (
-              <MessageContainer
+              <MessageComponent
                 key={message.id}
                 sender={message.role === "user" ? "user" : "AI"}
                 timestamp={message.createdAt!}
