@@ -1,15 +1,54 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { cn } from "@/utils/tailwind";
+import { AiFillCopy, AiOutlineShareAlt } from "react-icons/ai";
+import BotAvatar from './BotAvatar';
+import UserAvatar from './UserAvatar';
 
 interface MessageProps {
   content: string
-  timestamp: Date
+  timestamp?: Date
   sender: 'user' | 'AI'
-  avatar?: string
+  handleToast: () => void
 }
 
-const MessageContainer: React.FC<MessageProps> = ({ content, timestamp, sender, avatar }) => {
+const MessageContainer: React.FC<MessageProps> = ({ content, timestamp, sender, handleToast }) => {
   const isUser = sender === 'user'
+
+  const [isCopied, setIsCopied] = useState(false);
+
+  useEffect(() => {
+    if(isCopied) {
+      handleToast();
+
+    }
+  }, [isCopied])
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Shared Message',
+          text: content,
+        });
+      } catch (err) {
+        console.error('Failed to share: ', err);
+      }
+    } else {
+      console.log('Web Share API not supported');
+      // Fallback behavior: copy to clipboard
+      handleCopy();
+    }
+  };
 
   return (
     <div className={cn(
@@ -23,7 +62,7 @@ const MessageContainer: React.FC<MessageProps> = ({ content, timestamp, sender, 
         <div className="flex items-start">
           {!isUser && (
             <div className="h-8 w-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
-              <img src={avatar || "/placeholder.svg?height=32&width=32"} alt="System Avatar" className="h-full w-full object-cover" />
+              <BotAvatar/>
             </div>
           )}
           <div>
@@ -42,10 +81,18 @@ const MessageContainer: React.FC<MessageProps> = ({ content, timestamp, sender, 
           </div>
           {isUser && (
             <div className="h-8 w-8 rounded-full overflow-hidden ml-2 flex-shrink-0">
-              <img src={avatar || "/placeholder.svg?height=32&width=32"} alt="User Avatar" className="h-full w-full object-cover" />
+              <UserAvatar/>
             </div>
           )}
         </div>
+        <div className='control-panel'>
+          <div onClick={handleCopy} className='control-panel-item'>
+            <AiFillCopy/>
+          </div>
+          <div onClick={handleShare} className='control-panel-item'>
+            <AiOutlineShareAlt/>
+          </div>
+      </div>
       </div>
     </div>
   )

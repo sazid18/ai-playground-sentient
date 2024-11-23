@@ -1,15 +1,30 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 
-// Allow streaming responses up to 30 seconds
-export const maxDuration = 30;
-
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const {
+    messages,
+    data: { modelConfig },
+  } = await req.json();
+  const {
+    temperature,
+    topPSampling: topP,
+    presencePenalty,
+    frequencyPenalty,
+  } = modelConfig;
+
+  /*  Temperature setting. This is a number between 0 (almost no randomness) and 1 (very random).
+      Presence penalty setting. It affects the likelihood of the model to repeat information that is already in the prompt.
+      Frequency penalty setting. It affects the likelihood of the model to repeatedly use the same words or phrases.
+  */
 
   const result = streamText({
     model: openai("gpt-4-turbo"),
-    messages,
+    messages: messages,
+    temperature,
+    topP,
+    presencePenalty,
+    frequencyPenalty,
   });
 
   return result.toDataStreamResponse();
