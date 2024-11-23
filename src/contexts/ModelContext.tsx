@@ -34,7 +34,7 @@ export const useModelConfig = () => {
   const context = useContext(ModelContext);
 
   if (context === null) {
-    throw new Error(" must be used within a SettingsProvider");
+    throw new Error("Must be used within a Model Provider");
   }
   return context;
 };
@@ -42,7 +42,7 @@ export const useModelConfig = () => {
 export const ModelProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [modelConfig, setModelConfig] =  useState<Record<string, number>>({});
 
-  const updateModelConfig = (value) => {
+  const updateModelConfig = (value: Record<string, number>) => {
     setModelConfig((oldValue) => {
       return {
         ...oldValue,
@@ -64,6 +64,8 @@ export const ModelProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         description: "Your model config have been successfully imported.",
       })
     } catch(error) {
+      // Logging this error to this container
+      console.error(error);
       toast({
         title: "Import failed",
         description: "There was an error importing your settings. Please check the format and try again.",

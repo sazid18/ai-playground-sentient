@@ -1,9 +1,12 @@
 import React from 'react'
 import Chat from './Chat'
+import { ModelProvider } from '@/contexts/ModelContext'
 
 const ChatPage = () => {
   return (
-    <Chat/>
+    <ModelProvider>
+      <Chat/>
+    </ModelProvider>
   )
 }
 

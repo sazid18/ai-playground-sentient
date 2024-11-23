@@ -6,7 +6,7 @@ import UserAvatar from './UserAvatar';
 
 interface MessageProps {
   content: string
-  timestamp?: Date
+  timestamp: Date
   sender: 'user' | 'AI'
   handleToast: () => void
 }

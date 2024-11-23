@@ -1,6 +1,6 @@
 "use client";
 
-import { useChat } from "ai/react";
+import { Message, useChat } from "ai/react";
 import MessageContainer from "./MessageCotainer";
 import { toast } from "react-hot-toast";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -16,7 +16,7 @@ export default function Chat() {
     error,
     stop,
   } = useChat();
-  const bottomRef = useRef<Element>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
   const startTime = useRef(new Date().getTime());
 
   const {modelConfig} = useModelConfig();
@@ -24,11 +24,26 @@ export default function Chat() {
   // Assumption: that a model has this fixed token limit,
   // this should ideally be configurable based on model used in streamText
   const maxTokens = useRef(8192);
+
+  const intersectionObserver = useRef<IntersectionObserver | null>(null);
   const [metrics, setMetrics] = useState({
     tokensPerSecond: 0,
     totalTokensUsed: 0,
     estimatedCompletionTime: 0,
   });
+
+  useEffect(() => {
+    intersectionObserver.current = new IntersectionObserver((entries) => {
+      if (bottomRef.current) {
+        const currentBottomRef = entries[0];
+        if (!currentBottomRef.isIntersecting && isLoading) {
+          console.log(" isLoading ", isLoading);
+          bottomRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    });
+    return () => intersectionObserver.current?.disconnect();
+  }, [])
 
   // SideEffect to handle live metrics
   useEffect(() => {
@@ -42,37 +57,27 @@ export default function Chat() {
       return {
         ...prevMetrics,
         tokensPerSecond: parseFloat(tokensPerSecond.toFixed(1)),
-        totalTokensUsed: totalTokensUsed.toFixed(),
+        totalTokensUsed: parseInt(totalTokensUsed.toFixed()),
         estimatedCompletionTime: parseFloat(estimatedCompletionTime.toFixed(1)),
       };
     });
   }, [messages]);
 
   useEffect(() => {
-    console.log("isLoading =", isLoading);
     if (isLoading && bottomRef.current) {
       console.log("observing bottom ref");
-      intersectionObserver.observe(bottomRef.current);
+      intersectionObserver.current?.observe(bottomRef.current);
     } else {
       console.log("unobserving bottom ref");
-      setTimeout(() => intersectionObserver.unobserve(bottomRef.current!), 0);
+      setTimeout(() => intersectionObserver.current?.unobserve(bottomRef.current!), 0);
     }
   }, [isLoading]);
 
-  const getTotalTokenUsed = (aiMessages) => {
+  const getTotalTokenUsed = (aiMessages: Message[]) => {
     return aiMessages.reduce((acc, val) => {
       return (acc += val.content.split(" ").length);
     }, 0);
   };
-  const intersectionObserver = new IntersectionObserver((entries) => {
-    if (bottomRef.current) {
-      const currentBottomRef = entries[0];
-      if (!currentBottomRef.isIntersecting && isLoading) {
-        console.log(" isLoading ", isLoading);
-        bottomRef.current.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  });
 
   const handleFormSubmit = (event: { preventDefault?: () => void }) => {
     // event?.preventDefault();
@@ -123,7 +128,7 @@ export default function Chat() {
               <MessageContainer
                 key={message.id}
                 sender={message.role === "user" ? "user" : "AI"}
-                timestamp={message.createdAt}
+                timestamp={message.createdAt!}
                 content={message.content}
                 handleToast={handleToast}
               />
