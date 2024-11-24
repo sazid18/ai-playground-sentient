@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## 🛠️ Setup and Installation
 
-## Getting Started
+### Prerequisites
+- **Node.js** (v18 or later)
+- **npm**
+- **Add gemini key to env properties [Link](https://ai.google.dev/gemini-api/docs/api-key)**
 
-First, run the development server:
+### Install Dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Start Local dev server
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Features
 
-## Learn More
+### 🌐 **Streaming Interface**
+The streaming interface is designed to provide a seamless real-time interaction experience. Key features include:
 
-To learn more about Next.js, take a look at the following resources:
+- **Scroll Container with Auto-Scroll**: Automatically scrolls to the latest message as new responses arrive.
+- **Copy & Share Support**: Enables users to easily copy and share the content of any message.
+- **Live Metrics Display**: Tracks and displays key metrics in real-time:
+  - **Tokens per Second**:  
+    Calculated using:  
+    ```javascript
+    tokensPerSecond = (tokensCount * 1000) / totalTime;
+    ```
+  - **Total Token Usage**:  
+    Derived using:  
+    ```javascript
+    getTotalTokenUsed(messages); // Splits messages to compute total tokens.
+    ```
+  - **Estimated Completion Time**:  
+    Estimated based on:  
+    ```javascript
+    estimatedCompletionTime = 
+      (maxTokens.current - tokensCount) / tokensPerSecond;
+    ```
+- **Powered by Vercel AI SDK**: These functionalities are implemented using the `useChat` interface provided by the Vercel AI SDK.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### ⚙️ **Model Configuration**
+The model configuration feature allows for fine-tuning AI behavior through various parameters:  
+- **Temperature**: Controls randomness in responses (0–2).  
+- **Top-k Sampling**: Limits choices to the top-k tokens.  
+- **Frequency Penalty**: Reduces the likelihood of repeating tokens.  
+- **Presence Penalty**: Encourages topic diversity.  
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### Key Features:
+- Parameters are managed using the **Context API**, enabling seamless integration with the chat component.  
+- Configurations are passed to the **`streamText` constructor** to ensure accurate model behavior.  
+- **Import & Export Support**: Easily save and load model configurations for reuse or sharing.  
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 🔧 Further Optimizations
+To enhance State Management, Recovery Mechanism and UX are the following optimizations can be implemented:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Advanced State Management**: 
+   - Implement more granular state updates to reduce unnecessary renders.  
+
+2. **Error Recovery**:  
+   - Provide richer error recovery options, like restarting sessions without data loss.  
+   - Integrate with external logging systems for better error diagnostics.  
+
+3. **User Interface Enhancements**:  
+   - Add drag-and-drop functionality for importing/exporting model configurations.  
+   - Implement a dark mode toggle for better user accessibility.  
